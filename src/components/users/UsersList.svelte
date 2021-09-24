@@ -1,87 +1,143 @@
 <script>
-  import { socket } from "../../store.js"
+  import { socket, updateUsersList, usersList } from "../../store.js";
+  import AvatarComponent from "./sub-components/AvatarComponent.svelte";
+  import { normalizeUser } from "../../helpers/normalizers";
+  import Status from "./sub-components/Status.svelte";
+  import Disappear from "../Disappear.svelte";
 
-  let usersList = []
-  $: anonymousCount = usersList.filter((el) => el.name === "Anonymous").length
+  $: anonymousCount = $usersList.filter((el) => el.name === "Anonymous").length;
 
-  /*
-	 * Récupérer les utilisateurs au lancement
-	 */
-  socket.emit('getUsers')
-  socket.on('users', (users) => {
-    // console.log('users', users)
-    usersList = users
-  })
-
-  /*
-   * Récupérer chaque nouvel utilisateur
-   */
-  socket.on("userConnection", addUser)
+  /* Récupérer chaque nouvel utilisateur */
+  socket.on("userConnection", addUser);
 
   function addUser(user) {
-    usersList = [...usersList, user]
-    console.group("Arrivée")
-    console.info(user)
-    console.groupEnd()
-    // console.log('usersList', usersList)
+    normalizeUser(user);
+    $usersList = [...$usersList, user];
   }
 
-  /*
-   * Enlever les utilisateurs déconnectés
-   */
-  socket.on('userDisconnection', removeUser)
+  /* Enlever les utilisateurs déconnectés */
+  socket.on("userDisconnection", removeUser);
 
-  function removeUser(user) {
-    usersList = usersList.filter(item => item.id !== user.id);
+  function removeUser(offlineUser) {
+    let realOfflineUser;
+    $usersList.map((user) => {
+      if (user.id === offlineUser.id) {
+        realOfflineUser = user;
+      }
+    });
 
-    // console.group("Départ")
-    // console.log(user, "est parti")
-    // console.log(usersList.filter((el) => el.id === user.id)[0])
-    // console.groupEnd()
+    if (realOfflineUser.name === "Anonymous") {
+      // Si l’utilisateur est anonyme, on le supprime
+      $usersList = $usersList.filter(item => item.id !== offlineUser.id);
+    } else {
+      // Si l’utilisateur a un nom, on modifie son statut
+      const newUsersList = $usersList.map((user) => {
+        return user.id === offlineUser.id ? {
+          ...user,
+          status: false
+        } : user;
+      });
+
+      updateUsersList(newUsersList);
+    }
   }
 
-  /*
-   * updateUsername
-   */
-  socket.on('updateUsername', updateUser)
+  /* updateUsername */
+  socket.on("updateUsername", updateUser);
 
   function updateUser(newUser) {
-    console.log('newUser', newUser.id)
-    console.log('newUser', newUser.name)
-    console.log(usersList.find(el => el.id === newUser.id).id)
+    normalizeUser(newUser);
 
-    usersList.find(el => el.id === newUser.id).name = newUser.name
-    usersList = usersList
-    console.log(usersList)
+    const newUsersList = $usersList.map((user) => {
+      return user.id === newUser.id ? {
+        ...user,
+        initials: newUser.name.substring(0, 2),
+        name: newUser.name
+      } : user;
+    });
+    updateUsersList(newUsersList);
   }
 </script>
 
 <div class="users-list-container">
-  <h1>Utilisateurs</h1>
-  <ul>
-    {#each usersList.filter((el) => el.name !== "Anonymous") as item}
-      <li>
-        {item.name}
-      </li>
+  <header>
+    <h1>En ligne</h1>
+<!--    <Disappear position="top" color="light"></Disappear>-->
+  </header>
+
+  <div class="list-container">
+    {#each $usersList.filter((el) => el.name !== "Anonymous") as user}
+      <div>
+        <AvatarComponent {user}>
+          <div class="name-container">
+            <h2>{user.name}</h2><Status online={user.status} full={false}/>
+          </div>
+        </AvatarComponent>
+      </div>
     {/each}
+  </div>
 
-    <li>
-      {#if anonymousCount === 1}
-        {anonymousCount} anonyme
-      {:else if anonymousCount >= 2}
-        {anonymousCount} anonymes
-      {/if}
-    </li>
+  <p>
+    {#if anonymousCount === 1}
+      ...et {anonymousCount} utilisateur anonyme
+    {:else if anonymousCount >= 2}
+      ...et {anonymousCount} utilisateurs anonymes
+    {/if}
+  </p>
 
-  </ul>
+<!--  <Disappear position="bottom" color="light"></Disappear>-->
 </div>
 
-<style>
+<style lang="scss">
   .users-list-container {
-    border: 1px solid red;
-  }
+    height: 100%;
+    border-radius: 16px 16px 0 0;
+    padding: 0 40px 24px;
+    overflow: scroll;
+    background: $colorLight;
 
-  li {
-    margin-bottom: 12px;
+    //.scroll-container {
+    //  height: 100%;
+    //  max-height: 100%;
+    //  padding: 0 40px;
+    //  overflow: scroll;
+    //}
+
+    header {
+      position: sticky;
+      top: 0;
+      padding: 24px 0;
+      background-color: $colorLight;
+
+      h1 {
+        margin: 0;
+        color: $colorH1;
+        font-weight: 600;
+        font-size: 18px;
+      }
+    }
+
+    h2 {
+      font-size: 14px;
+      font-weight: 400;
+      margin-right: 8px;
+    }
+
+    div:not(:first-child) {
+      margin-top: 12px;
+    }
+
+    li {
+      margin-bottom: 12px;
+    }
+
+    .name-container {
+      display: flex;
+      align-items: baseline;
+    }
+
+    .list-container {
+      margin-top: 50px;
+    }
   }
 </style>

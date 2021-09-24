@@ -1,72 +1,63 @@
 <script lang="ts">
-	import { socket } from "./store.js";
-	import MessagesList from "./components/messages/MessagesList.svelte";
-	import UsersList from "./components/users/UsersList.svelte";
-	import NewMessageForm from "./components/messages/NewMessageForm.svelte";
-	import SetUsernameForm from "./components/users/SetUsernameForm.svelte";
+	import { onMount } from "svelte";
+	import { socket, updateUsersList, updateCurrentUser, updateMessagesList, userConnected, messagesList } from "./store.js";
 
-	socket.on("connect", () => {
-		console.log(socket.id); // x8WIv7-mJelg7on_ALbx
-		console.log(socket.connected);
+	import { normalizeMessage, normalizeUser } from "./helpers/normalizers";
+	import LoginScreen from "./components/users/LoginScreen.svelte";
+	import ChatScreen from "./components/ChatScreen.svelte";
+
+	onMount(() => {
+		socket.on("connect", () => {
+			console.log("socket.id →", socket.id); // x8WIv7-mJelg7on_ALbx
+			console.log("Connected →", socket.connected);
+		});
+		socket.on("disconnect", () => {
+			console.log("socket.id →", socket.id); // undefined
+			console.log("Connected →", socket.connected);
+		});
+
+		/* Récupérer les utilisateurs au lancement */
+		socket.emit("getUsers");
+		socket.on("users", (users) => {
+			users.forEach(user => {
+				normalizeUser(user)
+			})
+
+			updateUsersList(users);
+
+			const currentUser = users.find(el => el.id === socket.id);
+			updateCurrentUser(currentUser);
+		});
 	});
-	socket.on("disconnect", () => {
-		console.log(socket.id); // undefined
-		console.log(socket.connected);
-	});
-
-	/*
-	 * Récupérer les utilisateurs
-	 */
-	// socket.emit("getUsers");
-	// socket.on("user", usersListener);
-	//
-	// function usersListener(user) {
-	// 	console.log("user", user);
-	// }
-	//
-	export let name: string;
-	//
-	// socket.emit("setUsername", name);
-
-	// socket.on('user', function (user) {
-	// 	console.info(user);
-	// });
-
-	// if (socket.connected) {
-	// 	socket.emit();
-	// } else {
-	//
-	// }
 </script>
 
 <div>
-	<aside>
-		<SetUsernameForm />
-		<NewMessageForm />
-		<UsersList />
-	</aside>
-
-	<main>
-		<MessagesList />
-	</main>
+	<!--{#if (!$userConnected)}-->
+<!--		<LoginScreen />-->
+<!--	{:else}-->
+		<ChatScreen />
+	<!--{/if}-->
 </div>
 
-<style>
-	div {
-		display: grid;
-		grid-gap: 16px;
-		grid-template-columns: 1fr 2fr;
+<style lang="scss">
+	:global(*) {
+		box-sizing: border-box;
 	}
 
-	main {
-		padding: 0;
+	:global(body) {
+		background: $colorDark;
+		font-family: 'Open Sans', sans-serif;
+	}
+
+	:global(input) {
 		margin: 0;
 	}
 
-	h1 {
-		color: #ff3e00;
-		text-transform: uppercase;
-		font-size: 4em;
-		font-weight: 100;
+	div {
+		height: 100vh;
+		width: 100vw;
+		display: grid;
+		grid-template-columns: $sidebarWidth 1fr;
+
 	}
 </style>

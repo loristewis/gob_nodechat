@@ -1,35 +1,33 @@
 <script>
-  import { socket } from "../../store.js"
-  import { beforeUpdate, afterUpdate } from 'svelte';
-
-  let messagesList = []
+  import { messagesList, socket, updateMessagesList } from "../../store.js";
+  import { beforeUpdate, afterUpdate } from "svelte";
+  import Message from "./Message.svelte";
+  import { normalizeMessage } from "../../helpers/normalizers";
 
   let container;
   let autoscroll;
 
-  /*
-	 * Récupérer les messages au lancement
-	 */
-  socket.emit('getMessages')
-  socket.on('messages', (messages) => {
-    console.log('messages', messages)
-    messagesList = messages
-  })
+  /* Récupérer les messages au lancement */
+  socket.emit("getMessages");
+  socket.on("messages", (messages) => {
+    messages.forEach(message => {
+      message = normalizeMessage(message)
+    })
 
-  /*
-   * Récupérer chaque nouveau message
-   */
-  socket.on("message", messageListener)
+    updateMessagesList(messages)
+  });
+
+  /* Récupérer chaque nouveau message */
+  socket.on("message", messageListener);
 
   function messageListener(message) {
-    // console.log('message', message)
-    messagesList = [...messagesList, message]
-    console.log('messagesList', messagesList)
+    message = normalizeMessage(message)
+
+    const newList = [...$messagesList, message];
+    updateMessagesList(newList)
   }
 
-  /*
-   * Autoscroll
-   */
+  /* Autoscroll */
   beforeUpdate(() => {
     autoscroll = container && (container.offsetHeight + container.scrollTop) > (container.scrollHeight - 20);
   });
@@ -40,26 +38,17 @@
 </script>
 
 <div class="messages-list-container" bind:this={container}>
-  <h1>Messages</h1>
-  <ul>
-    {#each messagesList as item}
-      <li>
-        {item.time} - {item.user.name}
-        <br>
-        {item.value}
-      </li>
-    {/each}
-  </ul>
+  {#each $messagesList as item, index}
+    <Message item={item} previousItem={$messagesList[index-1]} />
+  {/each}
 </div>
 
-<style>
-  .messages-list-container {
-    border: 1px solid #00C158;
-    height: 100vh;
-    overflow-y: scroll;
-  }
-
-  li {
-    margin-bottom: 12px;
-  }
+<style lang="scss">
+.messages-list-container {
+  height: calc(100vh - 212px);
+  margin-top: 124px;
+  //height: calc(100vh - 128px);
+  overflow-y: scroll;
+  padding: 0 48px;
+}
 </style>

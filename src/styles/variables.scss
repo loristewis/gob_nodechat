@@ -1,0 +1,97 @@
+:root {
+  --color-hot: linear-gradient(135deg, #B82100 0%, #FF4D00 100%);
+  --color-warm: linear-gradient(135deg, #F1D128 0%, #F15928 100%);
+  --color-cold: linear-gradient(135deg, #ADA7FF 0%, #A7DAFF 100%);
+  --color-secondary: linear-gradient(135deg, #52C1FF 0%, #52C1FF 0.01%, #982DCA 100%, #982DCA 100%);
+}
+
+$red: red;
+$green: #00C158;
+
+$colorPrimary: #6697F0;
+$gradientPrimary: linear-gradient(#6697F0, #6697F0);
+$colorSecondary: linear-gradient(135deg, #52C1FF 0%, #52C1FF 0.01%, #982DCA 100%, #982DCA 100%);
+$colorLight: #ffffff;
+$gradientLight: linear-gradient(#ffffff, #ffffff);
+$colorDark: #263142;
+
+$colorOnline: linear-gradient(135deg, #A5F1BA 0%, #3DDDF3 100%);
+$colorOffline: #D3D6DC;
+
+$colorHot: linear-gradient(135deg, #B82100 0%, #FF4D00 100%);
+$colorWarm: linear-gradient(135deg, #F1D128 0%, #F15928 100%);
+$colorCold: linear-gradient(135deg, #ADA7FF 0%, #A7DAFF 100%);
+
+$colorH1: #757BC8;
+
+$sidebarWidth: 567px;
+
+@mixin gradientBorder($width) {
+  border: double $width transparent;
+  border-radius: 30px;
+  background-image: $gradientLight, $colorSecondary;
+  background-origin: border-box;
+  background-clip: content-box, border-box;
+}
+
+@mixin button {
+  input[type="submit"] {
+    padding: 0.8rem 2rem;
+    background: $colorSecondary;
+    border-radius: 24px;
+    color: $colorLight;
+    border: none;
+    cursor: pointer;
+
+    box-shadow: 0px 4px 6px -1px rgba(0, 0, 0, 0.12), 0px 2px 4px -1px rgba(0, 0, 0, 0.07);
+    transition: background 250ms;
+    //transition-timing-function: ease-in;
+
+    &:hover {
+      background: $colorPrimary;
+    }
+
+    &:disabled {
+      background: $colorOffline;
+      cursor: not-allowed;
+
+      &:hover {
+        background: $colorOffline;
+      }
+    }
+  }
+}
+
+@mixin modalForm {
+  .input-border {
+    margin-bottom: 30px;
+
+    border-bottom: double 2px transparent;
+    background-image: $gradientLight, $colorSecondary;
+    background-origin: border-box;
+    background-clip: content-box, border-box;
+  }
+
+  input[type="text"] {
+    margin: 0;
+    padding: 0.8rem 0;
+    background: $colorSecondary;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    opacity: 1;
+    border: none;
+
+    &:focus {
+      outline: none;
+    }
+
+    &::placeholder {
+      background: $colorSecondary;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      opacity: 1;
+    }
+  }
+
+  @include button;
+}
