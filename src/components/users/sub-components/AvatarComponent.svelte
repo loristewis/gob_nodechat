@@ -32,7 +32,6 @@
     grid-template-columns: 48px 1fr;
     grid-column-gap: 16px;
     align-items: center;
-    cursor: pointer;
 
     .content {
       display: flex;
