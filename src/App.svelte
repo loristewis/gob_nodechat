@@ -32,11 +32,11 @@
 </script>
 
 <div>
-	<!--{#if (!$userConnected)}-->
-<!--		<LoginScreen />-->
-<!--	{:else}-->
+	{#if (!$userConnected)}
+		<LoginScreen />
+	{:else}
 		<ChatScreen />
-	<!--{/if}-->
+	{/if}
 </div>
 
 <style lang="scss">
